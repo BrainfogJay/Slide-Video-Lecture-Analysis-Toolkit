@@ -58,7 +58,6 @@ def tesseract_available():
 # Import Surya for OCR
 try:
     from surya.recognition import RecognitionPredictor
-    from surya.detection import DetectionPredictor
     SURYA_AVAILABLE = True
 except ImportError:
     SURYA_AVAILABLE = False
@@ -87,7 +86,6 @@ class OCRProcessor:
         if SURYA_AVAILABLE and cls.surya_recognition_predictor is None:
             try:
                 cls.surya_recognition_predictor = RecognitionPredictor()
-                cls.surya_detection_predictor = DetectionPredictor()
                 print("Surya OCR initialized successfully")
             except Exception as e:
                 print(f"Failed to initialize Surya OCR: {str(e)}")
@@ -760,7 +758,7 @@ class OCRProcessor:
         
         try:
             image = Image.open(image_path)
-            predictions = self.__class__.surya_recognition_predictor([image], [None], self.__class__.surya_detection_predictor)
+            predictions = self.__class__.surya_recognition_predictor([image], full_page=True)
             
             if not predictions:
                 return {"success": True, "results": []}
