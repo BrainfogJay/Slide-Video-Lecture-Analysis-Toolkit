@@ -89,6 +89,30 @@ async function initUploadedVideos(inputSection) {
         select.addEventListener('change', () => {
             if (select.value) loadUploadedVideo(select.value);
         });
+        // Refresh saved uploads after a successful upload without a page reload.
+        document.addEventListener('lectureseek:uploads-changed', async (event) => {
+            try {
+                const currentSelection = event.detail?.videoId || select.value;
+                const refreshedResponse = await fetch('/uploaded_videos', { cache: 'no-store' });
+                if (!refreshedResponse.ok) throw new Error(`HTTP ${refreshedResponse.status}`);
+                const refreshedData = await refreshedResponse.json();
+                if (!refreshedData.success) throw new Error(refreshedData.error || 'Could not refresh uploads');
+                select.replaceChildren(new Option('Saved uploads ▾', ''));
+                for (const video of refreshedData.videos) {
+                    const option = new Option(`${video.filename} (${(video.size_bytes / 1048576).toFixed(1)} MB)`, video.video_id);
+                    option.dataset.filename = video.filename;
+                    select.add(option);
+                    for (const variation of video.caption_variations || []) {
+                        addSavedCaptionVariation(video.video_id, variation);
+                    }
+                }
+                if (currentSelection && Array.from(select.options).some(option => option.value === currentSelection)) {
+                    select.value = currentSelection;
+                }
+            } catch (error) {
+                console.error('Error refreshing saved uploads:', error);
+            }
+        });
     } catch (error) {
         console.error('Error loading saved uploads:', error);
     }

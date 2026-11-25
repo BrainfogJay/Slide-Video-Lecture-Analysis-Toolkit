@@ -1289,6 +1289,7 @@ export async function processVideoUpload(file) {
         }
         state.currentVideoId = data.video_id;
         state.currentVideoFilename = file.name;
+        document.dispatchEvent(new CustomEvent('lectureseek:uploads-changed', { detail: { videoId: data.video_id } }));
         announceProjectOpened(data.video_id, file.name);
         await refreshTranscriptVersions();
         elements.exportChaptersBtn.disabled = false;
@@ -1317,7 +1318,7 @@ export async function processVideoUpload(file) {
         if (data.transcript) {
             console.log('Using existing transcript');
             state.currentTranscript = data.transcript;
-            state.currentTranscriptSource = data.has_whisper_transcript ? 'whisper' : 'youtube';
+            state.currentTranscriptSource = data.transcript_source || (data.has_whisper_transcript ? 'whisper' : 'youtube');
             
             // Update transcript display
             loadTranscript(data.transcript);
@@ -1421,6 +1422,7 @@ export async function processVideoUpload(file) {
                 'Video ready. No transcript is available.';
         }
         
+        updateScenes([], elements.videoPlayer);
         elements.scenesContainer.innerHTML = '<p>Click "Detect Slides" to analyze this video.</p>';
 
     } catch (error) {
@@ -1517,7 +1519,8 @@ export async function loadUploadedVideo(videoId, mediaExportId = null) {
             }
             fetchOcrResults(data.video_id);
         } else {
-            elements.scenesContainer.innerHTML = '<p>Click "Detect Slides" to analyze this video.</p>';
+                updateScenes([], elements.videoPlayer);
+        elements.scenesContainer.innerHTML = '<p>Click "Detect Slides" to analyze this video.</p>';
         }
 
         if (data.transcript) {
