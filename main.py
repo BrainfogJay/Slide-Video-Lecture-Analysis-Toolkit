@@ -1091,7 +1091,7 @@ async def download_video(video_id: str, background_tasks: BackgroundTasks, quali
         
         # Load existing transcript if available (the active translation/upload, if any)
         transcript_to_use = None
-        if has_whisper_transcript:
+        if os.path.exists(active_transcript_path):
             try:
                 with open(active_transcript_path, 'r') as f:
                     transcript_to_use = json.load(f)
@@ -1116,9 +1116,7 @@ async def download_video(video_id: str, background_tasks: BackgroundTasks, quali
                 print(f"Error getting YouTube transcript: {e}")
         
         # Start missing processing tasks
-        if not has_whisper_transcript and not transcript_in_progress:
-            await transcript_processor.start_whisper_generation(video_id, video_path, background_tasks)
-            transcript_in_progress = True
+        # Automatic Whisper disabled for YouTube videos.
         
         return JSONResponse({
             "success": True,

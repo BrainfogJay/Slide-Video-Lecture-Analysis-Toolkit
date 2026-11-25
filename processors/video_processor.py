@@ -68,7 +68,7 @@ class VideoProcessor:
         
         # Load existing transcript if available (the active translation/upload, if any)
         transcript_to_use = None
-        if has_whisper_transcript:
+        if os.path.exists(active_transcript_path):
             try:
                 with open(active_transcript_path, 'r', encoding='utf-8') as f:
                     transcript_to_use = json.load(f)
@@ -82,9 +82,7 @@ class VideoProcessor:
         has_youtube_transcript = False
         
         # Start missing processing tasks
-        if not has_whisper_transcript and not transcript_in_progress:
-            await transcript_processor.start_whisper_generation(video_hash, video_path, background_tasks)
-            transcript_in_progress = True
+        # Automatic Whisper disabled for existing videos.
         
         return JSONResponse({
             "success": True,
@@ -111,7 +109,7 @@ class VideoProcessor:
         embedding_processor = EmbeddingProcessor()
         
         # Start Whisper transcript generation in the background
-        await transcript_processor.start_whisper_generation(video_hash, video_path, background_tasks)
+        # Automatic Whisper disabled for new videos.
         
         return JSONResponse({
             "success": True,
@@ -120,7 +118,7 @@ class VideoProcessor:
             "transcript": None,
             "has_youtube_transcript": False,
             "has_whisper_transcript": False,
-            "transcript_in_progress": True,
+            "transcript_in_progress": False,
             "scenes": [],
             "is_duplicate": False
         })
